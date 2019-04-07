@@ -1,0 +1,94 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of testl012mix</title>
+  <meta name="keywords" content="testl012mix">
+  <meta name="description" content="% test 1: correctness of l012Rprox function">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../index.html">Home</a> &gt;  <a href="index.html">test</a> &gt; testl012mix.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../index.html"><img alt="<" border="0" src="../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for test&nbsp;<img alt=">" border="0" src="../right.png"></a></td></tr></table>-->
+
+<h1>testl012mix
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>% test 1: correctness of l012Rprox function</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre class="comment">% test 1: correctness of l012Rprox function</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre>0001 
+0002 <span class="comment">%% test 1: correctness of l012Rprox function</span>
+0003 
+0004 ntest = 100;
+0005 nx = 101;
+0006 nw = 10001; <span class="comment">% must be odd to test the point w = 0</span>
+0007 
+0008 fl012mix = @(w,x,alpha0,alpha1,alpha2) alpha0*(abs(w)&gt;eps(1)) <span class="keyword">...</span>
+0009     + alpha1*abs(w) + alpha2*0.5*abs(w).^2 + 0.5*abs(w-x).^2;
+0010 
+0011 ifprox = 1;
+0012 iffail= 0;
+0013 
+0014 <span class="keyword">for</span> i = 1:ntest
+0015     <span class="comment">% set up random alpha, l0w, l1w, l2w weights</span>
+0016     alpha = rand(); l0w = rand()*(rand()&gt;0.5); l1w = rand()*(rand()&gt;0.5); 
+0017     l2w = rand()*(rand() &gt; 0.5);
+0018     alpha0 = l0w*alpha; alpha1 = l1w*alpha; alpha2 = l2w*alpha;
+0019         
+0020     xs = linspace(-2,2,nx);
+0021     ws = linspace(-2,2,nw);
+0022     
+0023     hw = ws(2)-ws(1);
+0024     <span class="keyword">for</span> i = 1:length(xs)
+0025         x = xs(i);
+0026         
+0027         fs = fl012mix(ws,x,alpha0,alpha1,alpha2);
+0028         [fmin,imin] = min(fs);
+0029         wmin = ws(imin);
+0030         wprox = l012Rprox(x,alpha,l0w,l1w,l2w,ifprox);
+0031         fwprox = fl012mix(wprox,x,alpha0,alpha1,alpha2); 
+0032         
+0033         <span class="comment">% compare prox with brute force min</span>
+0034         <span class="keyword">if</span> ~(abs(wmin-wprox) &lt; 2*hw)
+0035             iffail = iffail+1;
+0036             fprintf(<span class="string">'fail\n'</span>);
+0037             fprintf(<span class="string">'weights %e %e %e\n'</span>,l0w,l1w,l2w);
+0038             fprintf(<span class="string">'f(wmin)  = %e\n'</span>,fmin);
+0039             fprintf(<span class="string">'f(wprox) = %e\n'</span>,fwprox);
+0040         <span class="keyword">end</span>
+0041         
+0042     <span class="keyword">end</span>
+0043 <span class="keyword">end</span>
+0044 
+0045 assert(iffail==0, <span class="keyword">...</span>
+0046     sprintf(<span class="string">'failed prox correctness test % i times out of %i'</span>,<span class="keyword">...</span>
+0047         iffail,nx*ntest));</pre></div>
+<hr><address>Generated on Fri 24-Aug-2018 16:20:34 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

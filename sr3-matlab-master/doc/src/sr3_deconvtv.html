@@ -1,0 +1,347 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of sr3_deconvtv</title>
+  <meta name="keywords" content="sr3_deconvtv">
+  <meta name="description" content="SR3_DECONVTV SR3-style relaxed pursuit method for total variation">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../index.html">Home</a> &gt;  <a href="index.html">src</a> &gt; sr3_deconvtv.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../index.html"><img alt="<" border="0" src="../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for src&nbsp;<img alt=">" border="0" src="../right.png"></a></td></tr></table>-->
+
+<h1>sr3_deconvtv
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>SR3_DECONVTV SR3-style relaxed pursuit method for total variation</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>function [x,w,stats] = sr3_deconvtv(cmat,img,varargin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre class="comment">SR3_DECONVTV SR3-style relaxed pursuit method for total variation 
+ regularized deconvolution
+ 
+ Required input (positional):
+
+   cmat   convolution kernel (double precision matrix), must have 
+          odd-valued dimensions (so that it can be centered)
+   img   double precision real matrix (size M by N) representing
+         an image (only a single color channel is supported for now)
+
+ Parameter input:
+
+   'lam'       hyper-parameter, control strength of R (default 1.0)
+   'kap'       hyper-parameter, control strength of the quadratic penalty
+               (default 1.0)
+   'itm'       maximum number of iterations (default 100)
+   'tol'       terminate if change in w (in l2 norm) is less than tol
+               (default 1e-6)
+   'ptf'       print every ptf iterations (don't print if 0). (default 0)
+   'modefit'   '2': (default '2')
+   'modereg'   '2': R = 0.5*squared 2 norm, i.e. 0.5*sum(abs(x).^2)
+               '1': R = 1 norm, i.e. sum(abs(x))
+               '0': R = 0 norm, i.e. nnz(x)
+               'mixed': R = sum of 0, 1, and squared 2 norms with 
+                weights l0w, l1w, and l2w
+               'other': R and Rprox must be provided
+               (default '1')
+   'ifobjhis'  flag, if nonzero, store the history of the values of the 
+               objective in stats.objhis; otherwise, these aren't stored
+   'ifstdtvobj'flag, if nonzero, then compute the objective as if 
+               the standard tv regularized problem were being optimized
+
+ output:
+   x, w the computed minimizers of the objective
+   stats - some basic statistics of the optimization
+   stats.iter = number of iterations
+   stats.errhis = difference between a given iteration and the next
+   stats.objhis = objective value at a given iteration
+
+ Example:
+
+   &gt;&gt; m = 100; n = 2000; k = 10;
+   &gt;&gt; A = randn(m,n);
+   &gt;&gt; y = zeros(n,1); y(randperm(n,k)) = sign(randn(k,1));
+   &gt;&gt; lam = A.'*b;
+   &gt;&gt; [x,w] = rrlsq(A,b,'lam',lam);
+
+ See also LASSO, LINSOLVE</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="l012vecRprox.html" class="code" title="function z = l012vecRprox(x,alpha,l0w,l1w,l2w,ifprox,ndim)">l012vecRprox</a>	L012VECRPROX utility function for the l0, l1, and l2 penalties</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function [p,R,Rprox] = sr3_deconvtv_parse_input(img,varargin)</a></li></ul>
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [x,w,stats] = sr3_deconvtv(cmat,img,varargin)</a>
+0002 <span class="comment">%SR3_DECONVTV SR3-style relaxed pursuit method for total variation</span>
+0003 <span class="comment">% regularized deconvolution</span>
+0004 <span class="comment">%</span>
+0005 <span class="comment">% Required input (positional):</span>
+0006 <span class="comment">%</span>
+0007 <span class="comment">%   cmat   convolution kernel (double precision matrix), must have</span>
+0008 <span class="comment">%          odd-valued dimensions (so that it can be centered)</span>
+0009 <span class="comment">%   img   double precision real matrix (size M by N) representing</span>
+0010 <span class="comment">%         an image (only a single color channel is supported for now)</span>
+0011 <span class="comment">%</span>
+0012 <span class="comment">% Parameter input:</span>
+0013 <span class="comment">%</span>
+0014 <span class="comment">%   'lam'       hyper-parameter, control strength of R (default 1.0)</span>
+0015 <span class="comment">%   'kap'       hyper-parameter, control strength of the quadratic penalty</span>
+0016 <span class="comment">%               (default 1.0)</span>
+0017 <span class="comment">%   'itm'       maximum number of iterations (default 100)</span>
+0018 <span class="comment">%   'tol'       terminate if change in w (in l2 norm) is less than tol</span>
+0019 <span class="comment">%               (default 1e-6)</span>
+0020 <span class="comment">%   'ptf'       print every ptf iterations (don't print if 0). (default 0)</span>
+0021 <span class="comment">%   'modefit'   '2': (default '2')</span>
+0022 <span class="comment">%   'modereg'   '2': R = 0.5*squared 2 norm, i.e. 0.5*sum(abs(x).^2)</span>
+0023 <span class="comment">%               '1': R = 1 norm, i.e. sum(abs(x))</span>
+0024 <span class="comment">%               '0': R = 0 norm, i.e. nnz(x)</span>
+0025 <span class="comment">%               'mixed': R = sum of 0, 1, and squared 2 norms with</span>
+0026 <span class="comment">%                weights l0w, l1w, and l2w</span>
+0027 <span class="comment">%               'other': R and Rprox must be provided</span>
+0028 <span class="comment">%               (default '1')</span>
+0029 <span class="comment">%   'ifobjhis'  flag, if nonzero, store the history of the values of the</span>
+0030 <span class="comment">%               objective in stats.objhis; otherwise, these aren't stored</span>
+0031 <span class="comment">%   'ifstdtvobj'flag, if nonzero, then compute the objective as if</span>
+0032 <span class="comment">%               the standard tv regularized problem were being optimized</span>
+0033 <span class="comment">%</span>
+0034 <span class="comment">% output:</span>
+0035 <span class="comment">%   x, w the computed minimizers of the objective</span>
+0036 <span class="comment">%   stats - some basic statistics of the optimization</span>
+0037 <span class="comment">%   stats.iter = number of iterations</span>
+0038 <span class="comment">%   stats.errhis = difference between a given iteration and the next</span>
+0039 <span class="comment">%   stats.objhis = objective value at a given iteration</span>
+0040 <span class="comment">%</span>
+0041 <span class="comment">% Example:</span>
+0042 <span class="comment">%</span>
+0043 <span class="comment">%   &gt;&gt; m = 100; n = 2000; k = 10;</span>
+0044 <span class="comment">%   &gt;&gt; A = randn(m,n);</span>
+0045 <span class="comment">%   &gt;&gt; y = zeros(n,1); y(randperm(n,k)) = sign(randn(k,1));</span>
+0046 <span class="comment">%   &gt;&gt; lam = A.'*b;</span>
+0047 <span class="comment">%   &gt;&gt; [x,w] = rrlsq(A,b,'lam',lam);</span>
+0048 <span class="comment">%</span>
+0049 <span class="comment">% See also LASSO, LINSOLVE</span>
+0050 
+0051 <span class="comment">% Copyright 2018 Travis Askham and Peng Zheng</span>
+0052 <span class="comment">% Available under the terms of the MIT License</span>
+0053 
+0054 <span class="comment">%% parse inputs</span>
+0055 
+0056 [m,n] = size(img);
+0057 [m1,n1] = size(cmat);
+0058 
+0059 [p,R,Rprox] = <a href="#_sub1" class="code" title="subfunction [p,R,Rprox] = sr3_deconvtv_parse_input(img,varargin)">sr3_deconvtv_parse_input</a>(img,varargin{:});
+0060 
+0061 lam = p.Results.lam;
+0062 kap = p.Results.kap;
+0063 itm = p.Results.itm;
+0064 tol = p.Results.tol;
+0065 ptf = p.Results.ptf;
+0066 modefit = p.Results.modefit;
+0067 modereg = p.Results.modereg;
+0068 ifstdtvobj = p.Results.ifstdtvobj;
+0069 x = p.Results.xinit;
+0070 w = p.Results.winit;
+0071 accelerate = p.Results.accelerate;
+0072 
+0073 <span class="comment">%% pre-process operators</span>
+0074 
+0075 alpha = lam/kap;
+0076 
+0077 <span class="comment">% convolution operator</span>
+0078 cmatbig = zeros(m,n);
+0079 cmatbig(1:m1,1:n1) = cmat;
+0080 cmatbig = circshift(cmatbig,[-((m1-1)/2),-((n1-1)/2)]);
+0081 cmathat = fftn(cmatbig);
+0082 
+0083 <span class="comment">% difference operators</span>
+0084 dfx = [-1 1];
+0085 dfy = [-1; 1];
+0086 dfxhat = fftn(dfx,[m,n]);
+0087 dfyhat = fftn(dfy,[m,n]);
+0088 
+0089 <span class="comment">% precompute a transpose times b</span>
+0090 atb = ifftn(conj(cmathat).*fftn(img));
+0091 
+0092 <span class="comment">% system matrix (in frequency space) for least squares solve</span>
+0093 atadtdhat = abs(cmathat).^2 + kap*(abs(dfxhat).^2 + abs(dfyhat).^2);
+0094 
+0095 xm = x;
+0096 wm = w;
+0097 vtop = reshape(w(1:m*n),m,n);
+0098 vbot = reshape(w(m*n+1:end),m,n);
+0099 
+0100 noi = 0;
+0101 
+0102 err = 2.0*tol;
+0103 errs = zeros(itm,1);
+0104 objs = zeros(itm,1);
+0105 
+0106 y = zeros(2*m*n,1);
+0107 
+0108 wm  = w;
+0109 vm  = w;
+0110 am  = 1.0;
+0111 
+0112 <span class="keyword">while</span> err &gt;= tol
+0113     <span class="comment">% solve least squares problem for x</span>
+0114     temp1 = atb + kap*ifftn(conj(dfxhat).*fftn(vtop) <span class="keyword">...</span>
+0115         + conj(dfyhat).*fftn(vbot)); 
+0116     xhat = fftn(temp1)./atadtdhat;
+0117     x = ifftn(xhat);
+0118     <span class="comment">%grad = ifftn(conj(cmathat).*(cmathat.*xhat-fftn(img))) ...</span>
+0119     <span class="comment">%        + kap*(ifftn(abs(dfxhat).^2.*xhat+abs(dfyhat).^2.*xhat)- ...</span>
+0120     <span class="comment">%        ifftn(conj(dfxhat).*fftn(wtop) + conj(dfyhat).*fftn(wbot)));</span>
+0121     <span class="comment">%fprintf('|g| %e\n',norm(grad,'fro'))</span>
+0122             
+0123     <span class="comment">% compute w as prox of C*x</span>
+0124     temp1 = ifftn( dfxhat.*xhat );
+0125     y(1:m*n) = temp1(:);
+0126     temp1 = ifftn( dfyhat.*xhat );
+0127     y(m*n+1:end) = temp1(:);
+0128     w = Rprox(y,alpha);
+0129 <span class="comment">%     wtop = reshape(w(1:m*n),m,n);</span>
+0130 <span class="comment">%     wbot = reshape(w(m*n+1:end),m,n);</span>
+0131     
+0132     <span class="comment">% acceleration step</span>
+0133     <span class="keyword">if</span> accelerate
+0134         a = 0.5*(1 + sqrt(1+4*am^2));
+0135         v = w + (am - 1)/a*(w - wm);
+0136         am = a;
+0137     <span class="keyword">else</span>
+0138         v = w;
+0139     <span class="keyword">end</span>
+0140     
+0141     vtop = reshape(v(1:m*n),m,n);
+0142     vbot = reshape(v(m*n+1:end),m,n);
+0143     
+0144     
+0145     
+0146     <span class="comment">% print and store convergence information</span>
+0147     noi = noi + 1;
+0148     <span class="comment">%err = norm(x-xm,'fro')/norm(xm,'fro');</span>
+0149     err = norm(w-wm,<span class="string">'fro'</span>)/norm(wm,<span class="string">'fro'</span>);
+0150     errs(noi) = err;
+0151     <span class="keyword">if</span> ifstdtvobj
+0152         obj = 0.5*norm(ifftn(cmathat.*xhat)-img,<span class="string">'fro'</span>)^2 <span class="keyword">...</span>
+0153             + lam*R(y);
+0154     <span class="keyword">else</span>
+0155         obj = 0.5*norm(ifftn(cmathat.*xhat)-img,<span class="string">'fro'</span>)^2 <span class="keyword">...</span>
+0156             + lam*R(w) + 0.5*kap*sum(abs(y-w).^2);
+0157     <span class="keyword">end</span>
+0158     
+0159     xm = x;
+0160     wm = w;
+0161     vm = v;
+0162     
+0163     
+0164     objs(noi) = obj;
+0165     <span class="keyword">if</span> mod(noi, ptf) == 0
+0166         fprintf(<span class="string">'iter %4d, obj %1.2e, err %1.2e\n'</span>, noi, obj, err);
+0167     <span class="keyword">end</span>
+0168     
+0169     <span class="keyword">if</span> noi &gt;= itm
+0170         <span class="keyword">break</span>;
+0171     <span class="keyword">end</span>
+0172     
+0173 <span class="keyword">end</span>
+0174 
+0175 stats.noi = noi;
+0176 stats.errs = errs(1:noi);
+0177 stats.objs = objs(1:noi);
+0178 
+0179 <span class="keyword">end</span>
+0180 
+0181 <a name="_sub1" href="#_subfunctions" class="code">function [p,R,Rprox] = sr3_deconvtv_parse_input(img,varargin)</a>
+0182 <span class="comment">%SR3_DECONVTV_PARSE_INPUT parse the input to SR3_DECONVTV</span>
+0183 <span class="comment">% Sets default values and checks types (within reason)</span>
+0184 <span class="comment">% See also SR3_DECONVTV for details</span>
+0185 
+0186     [m,n] = size(img);
+0187 
+0188     defaultlam = 1.0;
+0189     defaultkap = 1.0;
+0190     defaultitm = 100;
+0191     defaulttol = 1e-6;
+0192     defaultptf = 0;
+0193     defaultmodefit = <span class="string">'2'</span>;
+0194     defaultmodereg = <span class="string">'1'</span>;
+0195     defaultifstdtvobj = 1;
+0196     defaultaccelerate = false;
+0197     defaultl0w = 0.0;
+0198     defaultl1w = 0.0;
+0199     defaultl2w = 0.0;
+0200     defaultxinit = img;
+0201     defaultwinit = zeros(2*m*n,1);
+0202     
+0203     p = inputParser;
+0204     isdouble = @(x) isa(x,<span class="string">'double'</span>);
+0205     isdoublep = @(x) isa(x,<span class="string">'double'</span>) &amp;&amp; x &gt; 0;
+0206     isdoublepp = @(x) isa(x,<span class="string">'double'</span>) &amp;&amp; x &gt;= 0;
+0207     isnumericp = @(x) isnumeric(x) &amp;&amp; x &gt; 0;
+0208     isnumericpp = @(x) isnumeric(x) &amp;&amp; x &gt;= 0;    
+0209     
+0210     addParameter(p,<span class="string">'lam'</span>,defaultlam,isdoublep);
+0211     addParameter(p,<span class="string">'kap'</span>,defaultkap,isdoublep);
+0212     addParameter(p,<span class="string">'itm'</span>,defaultitm,isnumericp);
+0213     addParameter(p,<span class="string">'tol'</span>,defaulttol,isdoublep);
+0214     addParameter(p,<span class="string">'ptf'</span>,defaultptf,isnumericpp);
+0215     addParameter(p,<span class="string">'modefit'</span>,defaultmodefit,@ischar);
+0216     addParameter(p,<span class="string">'modereg'</span>,defaultmodereg,@ischar);
+0217     addParameter(p,<span class="string">'ifstdtvobj'</span>,defaultifstdtvobj,@isnumeric);
+0218     addParameter(p,<span class="string">'accelerate'</span>,defaultaccelerate,@islogical);
+0219     addParameter(p,<span class="string">'l0w'</span>,defaultl0w,isdoublepp);
+0220     addParameter(p,<span class="string">'l1w'</span>,defaultl1w,isdoublepp);
+0221     addParameter(p,<span class="string">'l2w'</span>,defaultl2w,isdoublepp);
+0222     addParameter(p,<span class="string">'xinit'</span>,defaultxinit,isdouble);
+0223     addParameter(p,<span class="string">'winit'</span>,defaultwinit,isdouble);    
+0224     
+0225     parse(p,varargin{:});
+0226     
+0227     <span class="comment">% override if mode '0' '1' or '2' selected</span>
+0228     <span class="keyword">if</span> strcmp(p.Results.modereg,<span class="string">'0'</span>)
+0229         l0w = 1; l1w = 0; l2w = 0;
+0230     <span class="keyword">elseif</span> strcmp(p.Results.modereg,<span class="string">'1'</span>)
+0231         l0w = 0; l1w = 1; l2w = 0;
+0232     <span class="keyword">elseif</span> strcmp(p.Results.modereg,<span class="string">'2'</span>)
+0233         l0w = 0; l1w = 0; l2w = 1;
+0234     <span class="keyword">else</span>
+0235         l0w = p.Results.l0w; l1w = p.Results.l1w; l2w = p.Results.l2w;
+0236     <span class="keyword">end</span>
+0237     
+0238     
+0239     <span class="keyword">if</span> strcmp(p.Results.modereg,<span class="string">'0'</span>) || strcmp(p.Results.modereg,<span class="string">'1'</span>) <span class="keyword">...</span>
+0240             || strcmp(p.Results.modereg,<span class="string">'2'</span>) || strcmp(modereg,<span class="string">'mixed'</span>)
+0241         <span class="keyword">if</span> (abs(l0w) == 0 &amp;&amp; abs(l1w) == 0 &amp;&amp; abs(l2w) == 0)
+0242             warning([<span class="string">'all weights in mixed norm are zero'</span>, <span class="keyword">...</span>
+0243                 <span class="string">'\n prox operation does nothing'</span>])
+0244         <span class="keyword">end</span>
+0245         R = @(x) <a href="l012vecRprox.html" class="code" title="function z = l012vecRprox(x,alpha,l0w,l1w,l2w,ifprox,ndim)">l012vecRprox</a>(x,1,l0w,l1w,l2w,0,2);
+0246         Rprox = @(x,alpha) <a href="l012vecRprox.html" class="code" title="function z = l012vecRprox(x,alpha,l0w,l1w,l2w,ifprox,ndim)">l012vecRprox</a>(x,alpha,l0w,l1w,l2w,1,2);
+0247     <span class="keyword">else</span>
+0248         error(<span class="string">'incorrect value for mode'</span>)
+0249     <span class="keyword">end</span>
+0250 
+0251 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Fri 24-Aug-2018 16:20:34 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

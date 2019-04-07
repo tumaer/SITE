@@ -1,0 +1,232 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of sr3_image_demo</title>
+  <meta name="keywords" content="sr3_image_demo">
+  <meta name="description" content="% SR3 Image Deconvolution Demo">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../index.html">Home</a> &gt;  <a href="index.html">demo</a> &gt; sr3_image_demo.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../index.html"><img alt="<" border="0" src="../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for demo&nbsp;<img alt=">" border="0" src="../right.png"></a></td></tr></table>-->
+
+<h1>sr3_image_demo
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>% SR3 Image Deconvolution Demo</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre class="comment">% SR3 Image Deconvolution Demo
+
+ In this file we demonstrate a more complicated use of the
+ SR3 framework. We have wrapped these steps up in the
+ function |sr3_deconvtv|.
+
+ Because of the flexibility in choosing $C$, it is possible to
+ create a simple-minded image deblurring utility using the $\ell_0$ 
+ or $\ell_1$ penalties. Further, acceleration is possible, which
+ we will demonstrate.
+
+ In this example, we load an image, blur it with a Gaussian convolution,
+ corrupt it with noise, define a smoothness penalty and solve using 
+ SR3.
+
+ $A$ corresponds to blurring (this is done with fft calls) and 
+ $C$ corresponds to x and y differences, stacked on top of each other.
+ The TV-like norm is then given by applying a vector version of either the 
+ l1 or l0 penalties to D*w. The $x$ corresponds to a smoothed out version 
+ of the original image. Using the $\ell_0$ penalty, the $x$ is 
+ cartoon-like (large flat regions) and the non-zero entries in $w$ 
+ correspond to edges. The smoothing with $\ell_1$ is less extreme (total 
+ variation denoising a la Rudin, Osher, Fatemi)</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">%% SR3 Image Deconvolution Demo</span>
+0002 <span class="comment">%</span>
+0003 <span class="comment">% In this file we demonstrate a more complicated use of the</span>
+0004 <span class="comment">% SR3 framework. We have wrapped these steps up in the</span>
+0005 <span class="comment">% function |sr3_deconvtv|.</span>
+0006 <span class="comment">%</span>
+0007 <span class="comment">% Because of the flexibility in choosing $C$, it is possible to</span>
+0008 <span class="comment">% create a simple-minded image deblurring utility using the $\ell_0$</span>
+0009 <span class="comment">% or $\ell_1$ penalties. Further, acceleration is possible, which</span>
+0010 <span class="comment">% we will demonstrate.</span>
+0011 <span class="comment">%</span>
+0012 <span class="comment">% In this example, we load an image, blur it with a Gaussian convolution,</span>
+0013 <span class="comment">% corrupt it with noise, define a smoothness penalty and solve using</span>
+0014 <span class="comment">% SR3.</span>
+0015 <span class="comment">%</span>
+0016 <span class="comment">% $A$ corresponds to blurring (this is done with fft calls) and</span>
+0017 <span class="comment">% $C$ corresponds to x and y differences, stacked on top of each other.</span>
+0018 <span class="comment">% The TV-like norm is then given by applying a vector version of either the</span>
+0019 <span class="comment">% l1 or l0 penalties to D*w. The $x$ corresponds to a smoothed out version</span>
+0020 <span class="comment">% of the original image. Using the $\ell_0$ penalty, the $x$ is</span>
+0021 <span class="comment">% cartoon-like (large flat regions) and the non-zero entries in $w$</span>
+0022 <span class="comment">% correspond to edges. The smoothing with $\ell_1$ is less extreme (total</span>
+0023 <span class="comment">% variation denoising a la Rudin, Osher, Fatemi)</span>
+0024 <span class="comment">%</span>
+0025 
+0026 <span class="comment">% load the popular 'cameraman' image</span>
+0027 b = double(imread(<span class="string">'cameraman.tiff'</span>));
+0028 [m,n] = size(b);
+0029 
+0030 <span class="comment">% seed random number generator (consistent runs)</span>
+0031 iseed = 8675309;
+0032 rng(iseed);
+0033 
+0034 <span class="comment">% parameters of blurring kernel</span>
+0035 blursigma = 3.0; <span class="comment">% controls width of standard deviation (in pixels)</span>
+0036 nblur = round(2*blursigma); <span class="comment">% gives size of filter (two standard deviations here)</span>
+0037 
+0038 <span class="comment">% other parameters</span>
+0039 <span class="comment">%noise parameters</span>
+0040 sigma = 2;
+0041 
+0042 
+0043 <span class="comment">% regularization parameters</span>
+0044 
+0045 lam1 = 0.125;
+0046 kap1 = 0.5/sigma;
+0047 
+0048 <span class="comment">% optimization parameters</span>
+0049 itm = 40;
+0050 
+0051 <span class="comment">% set up Gaussian blurring</span>
+0052 inds = -nblur:nblur;
+0053 blurmat1 = inds.^2 + (inds.^2).';
+0054 blurmat1 = exp(-0.5*blurmat1/blursigma^2);
+0055 bscale = sum(sum(abs(blurmat1)));
+0056 blurmat1 = blurmat1/bscale;
+0057 blurmat = zeros(m,n);
+0058 blurmat(1:2*nblur+1,1:2*nblur+1) = blurmat1;
+0059 blurmat = circshift(blurmat,[-(nblur),-(nblur)]);
+0060 blurhat = fftn(blurmat);
+0061 
+0062 <span class="comment">% perform blurring (this is like applying A)</span>
+0063 bhat = fftn(b);
+0064 bblurhat = blurhat.*bhat;
+0065 bblur = ifftn(bblurhat);
+0066 
+0067 <span class="comment">% rhs is blurred image plus noise</span>
+0068 noise = randn(m,n)*sigma;
+0069 rhs = bblur+noise;
+0070 
+0071 <span class="comment">% least squares solution (no regularization)</span>
+0072 no_reg = ifftn(fftn(rhs)./blurhat);
+0073 
+0074 snr_rhs = 20*log10(norm(rhs,<span class="string">'fro'</span>)/norm(noise,<span class="string">'fro'</span>));
+0075 
+0076         <span class="comment">% solve with vanilla proximal gradient descent</span>
+0077 mode = <span class="string">'1'</span>;
+0078 [x1,w1,stats1] = sr3_deconvtv(blurmat1,rhs,<span class="string">'itm'</span>,itm,<span class="string">'lam'</span>,lam1, <span class="keyword">...</span>
+0079     <span class="string">'kap'</span>,kap1,<span class="string">'modereg'</span>,mode,<span class="string">'ptf'</span>,10,<span class="string">'ifstdtvobj'</span>,0);
+0080 
+0081             <span class="comment">% solve with acceleration</span>
+0082 mode = <span class="string">'1'</span>;
+0083 [x1a,w1a,stats1a] = sr3_deconvtv(blurmat1,rhs,<span class="string">'itm'</span>,itm,<span class="string">'lam'</span>,lam1, <span class="keyword">...</span>
+0084     <span class="string">'kap'</span>,kap1,<span class="string">'modereg'</span>,mode,<span class="string">'ptf'</span>,10,<span class="string">'ifstdtvobj'</span>,0,<span class="string">'accelerate'</span>,true);
+0085 
+0086 <span class="comment">% signal-to-noise ratio of recovered images</span>
+0087 snr_sr3 = 20*log10(1/(norm(x1-b,<span class="string">'fro'</span>)/norm(b,<span class="string">'fro'</span>)))
+0088 snr_sr3a = 20*log10(1/(norm(x1a-b,<span class="string">'fro'</span>)/norm(b,<span class="string">'fro'</span>)))
+0089 
+0090 <span class="comment">% sparsity of w (thresholded TV derivative of the image)</span>
+0091 nnz(w1)
+0092 nnz(w1a)
+0093 
+0094 <span class="comment">%% Convergence plot</span>
+0095 <span class="comment">% the accelerated method makes faster progress toward the solution</span>
+0096 
+0097 figure(1)
+0098 hold off
+0099 clf
+0100 
+0101 objs_sr31 = stats1.objs;
+0102 objs_sr31a = stats1a.objs;
+0103 msr = length(objs_sr31);
+0104 
+0105 mshow = min(msr,75);
+0106 
+0107 minall = min([min(objs_sr31),min(objs_sr31a)]);
+0108 maxall = max([max(objs_sr31),max(objs_sr31a)]);
+0109 
+0110 hold on
+0111 semilogy((objs_sr31(1:mshow)-minall)/(maxall-minall),<span class="string">'^r'</span>)
+0112 semilogy((objs_sr31a(1:mshow)-minall)/(maxall-minall),<span class="string">'ob'</span>)
+0113 
+0114 legend(<span class="string">'Vanilla SR3'</span>,<span class="string">'Accelerated SR3'</span>)
+0115 
+0116 <span class="comment">%% Recovered images</span>
+0117 <span class="comment">% the recovered images are visually similar, and are a huge improvement</span>
+0118 <span class="comment">% over the unregularized least squares solution, which is gibberish</span>
+0119 
+0120 figure(2)
+0121 hold off
+0122 
+0123 mstart = 75;
+0124 mend = 175;
+0125 nstart = 175;
+0126 nend = 325;
+0127 
+0128 subplot(2,2,1)
+0129 h=pcolor(flipud(b(mstart:mend,nstart:nend)));
+0130 set(h,<span class="string">'EdgeColor'</span>,<span class="string">'none'</span>)
+0131 colormap(<span class="string">'gray'</span>)
+0132 axis equal
+0133 axis tight
+0134 caxis([-128 383])
+0135 set(gca,<span class="string">'xticklabel'</span>,[])
+0136 set(gca,<span class="string">'yticklabel'</span>,[])
+0137 subplot(2,2,2)
+0138 h=pcolor(flipud(no_reg(mstart:mend,nstart:nend,1)));
+0139 set(h,<span class="string">'EdgeColor'</span>,<span class="string">'none'</span>)
+0140 colormap(<span class="string">'gray'</span>)
+0141 axis equal
+0142 axis tight
+0143 caxis([-128 383])
+0144 set(gca,<span class="string">'xticklabel'</span>,[])
+0145 set(gca,<span class="string">'yticklabel'</span>,[])
+0146 subplot(2,2,3)
+0147 h=pcolor(flipud(x1(mstart:mend,nstart:nend,1)));
+0148 set(h,<span class="string">'EdgeColor'</span>,<span class="string">'none'</span>)
+0149 colormap(<span class="string">'gray'</span>)
+0150 axis equal
+0151 axis tight
+0152 caxis([-128 383])
+0153 set(gca,<span class="string">'xticklabel'</span>,[])
+0154 set(gca,<span class="string">'yticklabel'</span>,[])
+0155 subplot(2,2,4)
+0156 h=pcolor(flipud(x1a(mstart:mend,nstart:nend,1)));
+0157 set(h,<span class="string">'EdgeColor'</span>,<span class="string">'none'</span>)
+0158 colormap(<span class="string">'gray'</span>)
+0159 axis equal
+0160 axis tight
+0161 caxis([-128 383])
+0162 set(gca,<span class="string">'xticklabel'</span>,[])
+0163 set(gca,<span class="string">'yticklabel'</span>,[])</pre></div>
+<hr><address>Generated on Fri 24-Aug-2018 16:20:34 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

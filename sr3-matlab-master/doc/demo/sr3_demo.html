@@ -1,0 +1,289 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of sr3_demo</title>
+  <meta name="keywords" content="sr3_demo">
+  <meta name="description" content="% Sparse Relaxed Regularized Regression (SR3) demo">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../index.html">Home</a> &gt;  <a href="index.html">demo</a> &gt; sr3_demo.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../index.html"><img alt="<" border="0" src="../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for demo&nbsp;<img alt=">" border="0" src="../right.png"></a></td></tr></table>-->
+
+<h1>sr3_demo
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>% Sparse Relaxed Regularized Regression (SR3) demo</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>This is a script file. </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre class="comment">% Sparse Relaxed Regularized Regression (SR3) demo
+
+ In this file we demonstrate the use of the |sr3| MATLAB(R) routine
+ on a few examples in regularized least squares fitting.
+
+ The SR3 framework is an approach to problems of the form 
+
+ $$ \min_x \frac{1}{2} \|Ax-b\|_{\ell_2}^2 + \lambda R(C x) $$ 
+
+ where $R(Cx)$ represents some regularizer. For example, in LASSO
+ style regression, we have that $C$ is the identity and 
+ $R(x)=\|x\|_{\ell_1}$.
+
+ The relaxation comes in by introducing a variable $w$ which
+ does a good job of minimizing the regularizer, while $x$ is allowed
+ to vary a little around that. Consider instead the minimization
+ problem
+
+ $$ \min_{x,w} \frac{1}{2} \|Ax-b\|_{\ell_2}^2 + \lambda R(w)
+   + \frac{\kappa}{2} \|Cx-w\|_{\ell_2}^2 $$
+
+ When $C$ is the identity, the variable $w$ tends to be a good
+ approximation of the solution of the original problem. For sparse
+ signal problems in particular, $w$ performs well at recovering
+ the 'true' support. When $C$ is not the identity, the splitting
+ into $x$ and $w$ allows for a simple prox-type operation to be
+ applied to $w$ (for prox friendly $R$) as opposed to dealing with
+ the more complicated penalty $R(Cx)$.</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre>0001 <span class="comment">%% Sparse Relaxed Regularized Regression (SR3) demo</span>
+0002 <span class="comment">%</span>
+0003 <span class="comment">% In this file we demonstrate the use of the |sr3| MATLAB(R) routine</span>
+0004 <span class="comment">% on a few examples in regularized least squares fitting.</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">% The SR3 framework is an approach to problems of the form</span>
+0007 <span class="comment">%</span>
+0008 <span class="comment">% $$ \min_x \frac{1}{2} \|Ax-b\|_{\ell_2}^2 + \lambda R(C x) $$</span>
+0009 <span class="comment">%</span>
+0010 <span class="comment">% where $R(Cx)$ represents some regularizer. For example, in LASSO</span>
+0011 <span class="comment">% style regression, we have that $C$ is the identity and</span>
+0012 <span class="comment">% $R(x)=\|x\|_{\ell_1}$.</span>
+0013 <span class="comment">%</span>
+0014 <span class="comment">% The relaxation comes in by introducing a variable $w$ which</span>
+0015 <span class="comment">% does a good job of minimizing the regularizer, while $x$ is allowed</span>
+0016 <span class="comment">% to vary a little around that. Consider instead the minimization</span>
+0017 <span class="comment">% problem</span>
+0018 <span class="comment">%</span>
+0019 <span class="comment">% $$ \min_{x,w} \frac{1}{2} \|Ax-b\|_{\ell_2}^2 + \lambda R(w)</span>
+0020 <span class="comment">%   + \frac{\kappa}{2} \|Cx-w\|_{\ell_2}^2 $$</span>
+0021 <span class="comment">%</span>
+0022 <span class="comment">% When $C$ is the identity, the variable $w$ tends to be a good</span>
+0023 <span class="comment">% approximation of the solution of the original problem. For sparse</span>
+0024 <span class="comment">% signal problems in particular, $w$ performs well at recovering</span>
+0025 <span class="comment">% the 'true' support. When $C$ is not the identity, the splitting</span>
+0026 <span class="comment">% into $x$ and $w$ allows for a simple prox-type operation to be</span>
+0027 <span class="comment">% applied to $w$ (for prox friendly $R$) as opposed to dealing with</span>
+0028 <span class="comment">% the more complicated penalty $R(Cx)$.</span>
+0029 
+0030 <span class="comment">% initialize</span>
+0031 
+0032 clear; clf; close all;
+0033 iseed = 8675309;
+0034 rng(iseed);
+0035 set(groot, <span class="string">'defaultLineMarkerSize'</span>,10)
+0036 set(groot, <span class="string">'defaultLineLineWidth'</span>,2)
+0037 
+0038 
+0039 <span class="comment">%% Problem 1: $\ell_1$ vs $\ell_0$ penalties</span>
+0040 <span class="comment">%</span>
+0041 <span class="comment">% In this problem we test the performance of using SR3 to</span>
+0042 <span class="comment">% recover a sparse signal. Here $R$ is either the $\ell_1$</span>
+0043 <span class="comment">% or $\ell_0$ penalty. We also plot the results of a least squares</span>
+0044 <span class="comment">% fit and the built in |lasso| function (if available). This is a</span>
+0045 <span class="comment">% relatively easy problem and all of the regularizers perform well,</span>
+0046 <span class="comment">% beating the standard least squares approach for obvious reasons.</span>
+0047 
+0048 <span class="comment">% matrix dimensions</span>
+0049 m = 200;
+0050 n = 1000;
+0051 k = 10; <span class="comment">% number of non-zeros in true solution</span>
+0052 sigma = 1e-1; <span class="comment">% additive noise</span>
+0053 
+0054 A = randn(m,n);
+0055 
+0056 y = zeros(n,1);
+0057 ind = randperm(n,k);
+0058 y(ind) = sign(randn(k,1));
+0059 
+0060 b = A*y+sigma*randn(m,1);
+0061 
+0062 <span class="comment">% set up parameters of fit</span>
+0063 lam1 = 0.01; <span class="comment">% good for l_1 regularizer</span>
+0064 lam0 = 0.004; <span class="comment">% good for l_0 regularizer</span>
+0065 
+0066 <span class="comment">% apply solver</span>
+0067 [x0, w0] = sr3(A, b, <span class="string">'mode'</span>, <span class="string">'0'</span>, <span class="string">'lam'</span>,lam0,<span class="string">'ptf'</span>,0);
+0068 [x1, w1] = sr3(A, b, <span class="string">'lam'</span>,lam1,<span class="string">'ptf'</span>,0);
+0069 
+0070 <span class="comment">% built-ins</span>
+0071 xl2 = A\b;
+0072 <span class="keyword">if</span> exist(<span class="string">'lasso'</span>,<span class="string">'builtin'</span>)
+0073     xl1 = lasso(A,b,<span class="string">'Lambda'</span>,lam1);
+0074 <span class="keyword">end</span>
+0075 
+0076 <span class="comment">% plot solution</span>
+0077 <span class="comment">% both regularizers perform well on this problem, though the $\ell_1$</span>
+0078 <span class="comment">% regularizer introduces a little more bias</span>
+0079 figure(); hold on;
+0080 plot(y, <span class="string">'-*b'</span>); plot(x0, <span class="string">'-xr'</span>); plot(w0, <span class="string">'-og'</span>); plot(x1, <span class="string">'-xc'</span>);
+0081 plot(w1, <span class="string">'-om'</span>); scatter(1:length(xl2),xl2,<span class="string">'ok'</span>, <span class="keyword">...</span>
+0082     <span class="string">'MarkerFaceAlpha'</span>,0.25,<span class="string">'MarkerEdgeAlpha'</span>,0.25);
+0083 <span class="keyword">if</span> exist(<span class="string">'lasso'</span>,<span class="string">'builtin'</span>)
+0084     plot(xl1,<span class="string">'-ok'</span>); 
+0085     legend(<span class="string">'true signal'</span>, <span class="string">'x0'</span>, <span class="string">'w0'</span>, <span class="string">'x1'</span>, <span class="string">'w1'</span>,<span class="string">'backslash'</span>,<span class="string">'lasso'</span>);
+0086 <span class="keyword">else</span>
+0087     legend(<span class="string">'true signal'</span>, <span class="string">'x0'</span>, <span class="string">'w0'</span>, <span class="string">'x1'</span>, <span class="string">'w1'</span>,<span class="string">'backslash'</span>);    
+0088 <span class="keyword">end</span>
+0089 
+0090 clear;
+0091 
+0092 <span class="comment">%% Problem 2: regularized derivatives</span>
+0093 <span class="comment">% In this problem, we take random projections of a smooth signal</span>
+0094 <span class="comment">% and attempt a reconstruction under a piecewise smoothness promoting</span>
+0095 <span class="comment">% regularization. Specifically, we assume $x$ to be a piecewise smooth</span>
+0096 <span class="comment">% 1D signal (though the measurements are possibly corrupted by noise).</span>
+0097 <span class="comment">% We consider both $x$ given by a hat function and $x$ given by a</span>
+0098 <span class="comment">% piecewise constant function. We then let $A$ be an $m \times n$ random</span>
+0099 <span class="comment">% measurement matrix, with $m &lt; n$. We set up $C$ to be the $n-1\times n$</span>
+0100 <span class="comment">% matrix mapping the signal to a finite difference approximation of the</span>
+0101 <span class="comment">% derivative. We then reconstruct the signal as the cumulative sum of</span>
+0102 <span class="comment">% $w$, adjusting for the integration constant.</span>
+0103 
+0104 
+0105 iseed = 8675309;
+0106 rng(iseed);
+0107 
+0108 n = 500;
+0109 m = 100;
+0110 sigma = 0.1;
+0111 A = randn(m,n);
+0112 
+0113 <span class="comment">% set up signal as step function (sparse derivative assumption)</span>
+0114 
+0115 y = zeros(n,1);
+0116 <span class="keyword">for</span> i = 1:5
+0117     y((i-1)*100+1:i*100) = i;
+0118 <span class="keyword">end</span>
+0119 
+0120 b = A*y + sigma*randn(m,1);
+0121 
+0122 e = ones(n,1);
+0123 C = spdiags([-e,e],[0,1],n-1,n); <span class="comment">% difference matrix</span>
+0124 
+0125 lam0 = 0.01;
+0126 lam1 = 0.02;
+0127 lam1_2 = 0.002;
+0128 
+0129 <span class="comment">% apply solver</span>
+0130 [x0, w0] = sr3(A, b, <span class="string">'mode'</span>, <span class="string">'0'</span>, <span class="string">'lam'</span>,lam0,<span class="string">'ptf'</span>,0,<span class="string">'C'</span>,C);
+0131 [x1, w1] = sr3(A, b, <span class="string">'mode'</span>, <span class="string">'1'</span>, <span class="string">'lam'</span>,lam1,<span class="string">'ptf'</span>,0,<span class="string">'C'</span>,C);
+0132 [x1_2, w1_2] = sr3(A, b, <span class="string">'mode'</span>, <span class="string">'1'</span>, <span class="string">'lam'</span>,lam1_2,<span class="string">'ptf'</span>,0,<span class="string">'C'</span>,C);
+0133 
+0134 cs = cumsum([0;w0]);
+0135 y0 = cs + (sum(x0)-sum(cs))/n;
+0136 cs = cumsum([0;w1]);
+0137 y1 = cs + (sum(x1)-sum(cs))/n;
+0138 cs = cumsum([0;w1_2]);
+0139 y1_2 = cs + (sum(x1_2)-sum(cs))/n;
+0140 
+0141 figure()
+0142 plot(y,<span class="string">'b'</span>)
+0143 hold on
+0144 plot(y0,<span class="string">'--r'</span>)
+0145 plot(y1,<span class="string">'--g'</span>)
+0146 plot(y1_2,<span class="string">'--m'</span>)
+0147 
+0148 legend(<span class="string">'true signal'</span>, <span class="string">'l0'</span>, <span class="string">'l1 v1'</span>, <span class="string">'l1 v2'</span>);    
+0149 
+0150 <span class="comment">% set up signal as piecewise linear (Chartrand example)</span>
+0151 <span class="comment">% note that here the regularization is on the second derivative</span>
+0152 <span class="comment">% also, the regularization is sensitive to lambda</span>
+0153 
+0154 n = 100;
+0155 
+0156 t = linspace(0,1,n).';
+0157 tmid = (t(2:end)+t(1:end-1))/2.0;
+0158 h = t(2)-t(1);
+0159 y = abs(t-0.5);
+0160 
+0161 b = y + sigma*randn(n,1);
+0162 
+0163 bstart = b(1);
+0164 b = b-bstart;
+0165 
+0166 sigma = 0.05;
+0167 
+0168 A = tril(ones(n,n-1),-1)*h;
+0169 e = ones(n,1);
+0170 C = spdiags([-e,e],[0,1],n-2,n-1)/h;
+0171 
+0172 lam0 = 0.007;
+0173 lam1 = 0.001;
+0174 
+0175 xi = diff(b)/h;
+0176 wi = C*xi;
+0177 
+0178 kappa0 = 1.0*h;
+0179 kappa1 = 1.0*h;
+0180 
+0181 <span class="comment">% apply solver</span>
+0182 [x0, w0] = sr3(A, b, <span class="string">'mode'</span>, <span class="string">'0'</span>, <span class="string">'lam'</span>,lam0,<span class="string">'itm'</span>,10000,<span class="string">'ptf'</span>,0,<span class="keyword">...</span>
+0183     <span class="string">'C'</span>,C,<span class="string">'x0'</span>,xi,<span class="string">'w0'</span>,wi,<span class="string">'kap'</span>,kappa0);
+0184 [x1, w1] = sr3(A, b, <span class="string">'mode'</span>, <span class="string">'1'</span>, <span class="string">'lam'</span>,lam1,<span class="string">'itm'</span>,10000,<span class="string">'ptf'</span>,0,<span class="keyword">...</span>
+0185     <span class="string">'C'</span>,C,<span class="string">'x0'</span>,xi,<span class="string">'w0'</span>,wi,<span class="string">'kap'</span>,kappa1);
+0186 
+0187 
+0188 <span class="comment">% reconstruct from w</span>
+0189 
+0190 cs = cumsum([0;w0])*h;
+0191 sw0 = cs + (sum(x0)-sum(cs))/length(cs);
+0192 sw0int = A*sw0;
+0193 coeffs = [sw0int,ones(n,1)]\(b+bstart);
+0194 y0 = coeffs(1)*sw0int + coeffs(2)*ones(n,1);
+0195 cs = cumsum([0;w1])*h;
+0196 sw1 = cs + (sum(x1)-sum(cs))/length(cs);
+0197 sw1int = A*sw1;
+0198 coeffs = [sw1int,ones(n,1)]\(b+bstart);
+0199 y1 = coeffs(1)*sw1int + coeffs(2)*ones(n,1);
+0200 
+0201 figure()
+0202 plot(t,y,<span class="string">'b'</span>)
+0203 hold on
+0204 plot(t,b+bstart,<span class="string">'--'</span>,<span class="string">'color'</span>,[0,0,0]+0.75);
+0205 plot(t,y0,<span class="string">'--r'</span>)
+0206 plot(t,y1,<span class="string">'--g'</span>)
+0207 
+0208 legend(<span class="string">'true signal'</span>,<span class="string">'corrupted'</span>, <span class="string">'l0'</span>, <span class="string">'l1'</span>);
+0209 
+0210 figure()
+0211 plot(tmid,diff(y),<span class="string">'-xb'</span>)
+0212 hold on
+0213 plot(tmid,diff(y0),<span class="string">'-xr'</span>)
+0214 plot(tmid,diff(y1),<span class="string">'-xg'</span>)
+0215 legend(<span class="string">'true derivative'</span>, <span class="string">'l0'</span>, <span class="string">'l1'</span>);</pre></div>
+<hr><address>Generated on Fri 24-Aug-2018 16:20:34 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

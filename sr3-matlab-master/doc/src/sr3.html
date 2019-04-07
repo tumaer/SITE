@@ -1,0 +1,338 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of sr3</title>
+  <meta name="keywords" content="sr3">
+  <meta name="description" content="SR3 Relaxed pursuit method for regularized least squares problems">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../index.html">Home</a> &gt;  <a href="index.html">src</a> &gt; sr3.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../index.html"><img alt="<" border="0" src="../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for src&nbsp;<img alt=">" border="0" src="../right.png"></a></td></tr></table>-->
+
+<h1>sr3
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>SR3 Relaxed pursuit method for regularized least squares problems</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>function [x, w] = sr3(A,b,varargin) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre class="comment">SR3 Relaxed pursuit method for regularized least squares problems
+ of the form:
+   0.5*norm(A*x-b,2)^2 + lam*R(w) + 0.5*kap*norm(C*x-w,2)^2
+ over x and w. The output w represents a regularized solution of 
+ the least squares problem described by A and b. 
+
+ Required input (positional):
+
+   A   double precision real or complex matrix (dimension, say, MxN)
+   b   double precision real or complex vector (length M)
+
+ Parameter input:
+
+   'x0'        initial guess, decision variable (default zeros(N,1))
+   'w0'        initial guess, regularized decision variable (default
+               zeros(N,1))
+   'C'         regularization pre-multiplication matrix as in formula
+               (default eye(N))
+   'lam'       hyper-parameter, control strength of R (default 1.0)
+   'kap'       hyper-parameter, control strength of the quadratic penalty
+               (default 1.0)
+   'ifusenormal' use the normal equations and Cholesky factorization
+                 rather than a QR decomposition for internal least 
+                 squares solves (this has advantages for large, sparse
+                 problems)
+   'itm'       maximum number of iterations (default 100)
+   'tol'       terminate if change in w (in l2 norm) is less than tol
+               (default 1e-6)
+   'ptf'       print every ptf iterations (don't print if 0). (default 0)
+   'mode'      '2': R = 0.5*squared 2 norm, i.e. 0.5*sum(abs(x).^2)
+               '1': R = 1 norm, i.e. sum(abs(x))
+               '0': R = 0 norm, i.e. nnz(x)
+               'mixed': R = sum of 0, 1, and squared 2 norms with 
+                weights l0w, l1w, and l2w
+               'other': R and Rprox must be provided
+               (default '1')
+   'l0w'       weight of l0 norm for 'mixed' mode (default 0.0)
+   'l1w'       weight of l1 norm for 'mixed' mode (default 0.0)
+   'l2w'       weight of l2 norm for 'mixed' mode (default 0.0)
+   'R'       function evaluating regularizer R
+   'Rprox'   proximal function which, for any alpha, evaluates 
+               Rprox(x,alpha) = argmin_y alpha*R(y)+0.5*norm(x-y,2)^2
+
+ output:
+   x, w the computed minimizers of the objective
+
+ Example:
+
+   &gt;&gt; m = 100; n = 2000; k = 10;
+   &gt;&gt; A = randn(m,n);
+   &gt;&gt; y = zeros(n,1); y(randperm(n,k)) = sign(randn(k,1));
+   &gt;&gt; lam = A.'*b;
+   &gt;&gt; [x,w] = sr3(A,b,'lam',lam);
+
+ See also LASSO, LINSOLVE</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="l012Rprox.html" class="code" title="function z = l012Rprox(x,alpha,l0w,l1w,l2w,ifprox)">l012Rprox</a>	L012RPROX utility function for the l0, l1, and l2 penalties</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function [p,R,Rprox] = sr3_parse_input(A,b,m,n,varargin)</a></li></ul>
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [x, w] = sr3(A,b,varargin)</a>
+0002 <span class="comment">%SR3 Relaxed pursuit method for regularized least squares problems</span>
+0003 <span class="comment">% of the form:</span>
+0004 <span class="comment">%   0.5*norm(A*x-b,2)^2 + lam*R(w) + 0.5*kap*norm(C*x-w,2)^2</span>
+0005 <span class="comment">% over x and w. The output w represents a regularized solution of</span>
+0006 <span class="comment">% the least squares problem described by A and b.</span>
+0007 <span class="comment">%</span>
+0008 <span class="comment">% Required input (positional):</span>
+0009 <span class="comment">%</span>
+0010 <span class="comment">%   A   double precision real or complex matrix (dimension, say, MxN)</span>
+0011 <span class="comment">%   b   double precision real or complex vector (length M)</span>
+0012 <span class="comment">%</span>
+0013 <span class="comment">% Parameter input:</span>
+0014 <span class="comment">%</span>
+0015 <span class="comment">%   'x0'        initial guess, decision variable (default zeros(N,1))</span>
+0016 <span class="comment">%   'w0'        initial guess, regularized decision variable (default</span>
+0017 <span class="comment">%               zeros(N,1))</span>
+0018 <span class="comment">%   'C'         regularization pre-multiplication matrix as in formula</span>
+0019 <span class="comment">%               (default eye(N))</span>
+0020 <span class="comment">%   'lam'       hyper-parameter, control strength of R (default 1.0)</span>
+0021 <span class="comment">%   'kap'       hyper-parameter, control strength of the quadratic penalty</span>
+0022 <span class="comment">%               (default 1.0)</span>
+0023 <span class="comment">%   'ifusenormal' use the normal equations and Cholesky factorization</span>
+0024 <span class="comment">%                 rather than a QR decomposition for internal least</span>
+0025 <span class="comment">%                 squares solves (this has advantages for large, sparse</span>
+0026 <span class="comment">%                 problems)</span>
+0027 <span class="comment">%   'itm'       maximum number of iterations (default 100)</span>
+0028 <span class="comment">%   'tol'       terminate if change in w (in l2 norm) is less than tol</span>
+0029 <span class="comment">%               (default 1e-6)</span>
+0030 <span class="comment">%   'ptf'       print every ptf iterations (don't print if 0). (default 0)</span>
+0031 <span class="comment">%   'mode'      '2': R = 0.5*squared 2 norm, i.e. 0.5*sum(abs(x).^2)</span>
+0032 <span class="comment">%               '1': R = 1 norm, i.e. sum(abs(x))</span>
+0033 <span class="comment">%               '0': R = 0 norm, i.e. nnz(x)</span>
+0034 <span class="comment">%               'mixed': R = sum of 0, 1, and squared 2 norms with</span>
+0035 <span class="comment">%                weights l0w, l1w, and l2w</span>
+0036 <span class="comment">%               'other': R and Rprox must be provided</span>
+0037 <span class="comment">%               (default '1')</span>
+0038 <span class="comment">%   'l0w'       weight of l0 norm for 'mixed' mode (default 0.0)</span>
+0039 <span class="comment">%   'l1w'       weight of l1 norm for 'mixed' mode (default 0.0)</span>
+0040 <span class="comment">%   'l2w'       weight of l2 norm for 'mixed' mode (default 0.0)</span>
+0041 <span class="comment">%   'R'       function evaluating regularizer R</span>
+0042 <span class="comment">%   'Rprox'   proximal function which, for any alpha, evaluates</span>
+0043 <span class="comment">%               Rprox(x,alpha) = argmin_y alpha*R(y)+0.5*norm(x-y,2)^2</span>
+0044 <span class="comment">%</span>
+0045 <span class="comment">% output:</span>
+0046 <span class="comment">%   x, w the computed minimizers of the objective</span>
+0047 <span class="comment">%</span>
+0048 <span class="comment">% Example:</span>
+0049 <span class="comment">%</span>
+0050 <span class="comment">%   &gt;&gt; m = 100; n = 2000; k = 10;</span>
+0051 <span class="comment">%   &gt;&gt; A = randn(m,n);</span>
+0052 <span class="comment">%   &gt;&gt; y = zeros(n,1); y(randperm(n,k)) = sign(randn(k,1));</span>
+0053 <span class="comment">%   &gt;&gt; lam = A.'*b;</span>
+0054 <span class="comment">%   &gt;&gt; [x,w] = sr3(A,b,'lam',lam);</span>
+0055 <span class="comment">%</span>
+0056 <span class="comment">% See also LASSO, LINSOLVE</span>
+0057 
+0058 <span class="comment">% Copyright 2018 Travis Askham and Peng Zheng</span>
+0059 <span class="comment">% Available under the terms of the MIT License</span>
+0060 
+0061 <span class="comment">%% parse inputs</span>
+0062 
+0063 [m,n] = size(A);
+0064 
+0065 [p,R,Rprox] = <a href="#_sub1" class="code" title="subfunction [p,R,Rprox] = sr3_parse_input(A,b,m,n,varargin)">sr3_parse_input</a>(A,b,m,n,varargin{:});
+0066 
+0067 x = p.Results.x0;
+0068 w = p.Results.w0;
+0069 C = p.Results.C;
+0070 lam = p.Results.lam;
+0071 kap = p.Results.kap;
+0072 itm = p.Results.itm;
+0073 tol = p.Results.tol;
+0074 ptf = p.Results.ptf;
+0075 ifusenormal = p.Results.ifusenormal;
+0076 ifuselsqr = p.Results.ifuselsqr;
+0077 
+0078 [md,~] = size(C);
+0079 <span class="keyword">if</span> md ~= n
+0080     w = zeros(md,1);
+0081 <span class="keyword">end</span>
+0082             
+0083 <span class="comment">%% pre-process data</span>
+0084 
+0085 rootkap = sqrt(kap);
+0086 alpha = lam/kap;
+0087 <span class="keyword">if</span> ifusenormal
+0088    atareg = (A.'*A) + kap*(C.'*C);
+0089    <span class="keyword">if</span> issparse(atareg)
+0090     [atacholfac,p,s] = chol(atareg,<span class="string">'upper'</span>,<span class="string">'vector'</span>);
+0091    <span class="keyword">else</span>
+0092     [atacholfac,p] = chol(atareg,<span class="string">'upper'</span>);
+0093     s = 1:n;
+0094    <span class="keyword">end</span>
+0095    <span class="keyword">if</span> p ~= 0 
+0096        error(<span class="string">'error using normal equations'</span>);
+0097    <span class="keyword">end</span>
+0098    atb = A.'*b;
+0099 <span class="keyword">elseif</span> ifuselsqr
+0100     sys = [A;rootkap*C];
+0101     u = [b;rootkap*w];
+0102     x = lsqr(sys,u,tol/2,100,[],[],x);    
+0103 <span class="keyword">else</span>
+0104     [Q,R,p] = qr([full(A);rootkap*full(C)],0);
+0105     opts.UT = true;
+0106 <span class="keyword">end</span>
+0107 
+0108 <span class="comment">%% start iteration</span>
+0109 
+0110 wm  = w;
+0111 err = 2.0*tol;
+0112 noi = 0;
+0113 
+0114 normb = norm(b,2);
+0115 
+0116 <span class="keyword">while</span> err &gt;= tol
+0117     <span class="comment">% xstep</span>
+0118     <span class="keyword">if</span> ifusenormal
+0119         u = atb + kap*(C.'*w);
+0120         x(s) = atacholfac\(atacholfac.'\u(s));
+0121     <span class="keyword">elseif</span> ifuselsqr
+0122         u = [b;rootkap*w];
+0123         x = lsqr(sys,u,tol/2,10,[],[],x);
+0124     <span class="keyword">else</span>
+0125         u = Q'*[b;rootkap*w]; <span class="comment">% apply q* from qr</span>
+0126         x(p) = linsolve(R,u,opts); <span class="comment">% solve rx = u</span>
+0127     <span class="keyword">end</span>
+0128     
+0129     <span class="comment">% store C*x</span>
+0130     y = C*x; 
+0131     
+0132     <span class="comment">% wstep</span>
+0133     w = Rprox(y,alpha);
+0134     
+0135     <span class="comment">% update convergence information</span>
+0136     obj = 0.5*sum((A*x-b).^2) + lam*R(w) + 0.5*kap*sum((y-w).^2);
+0137     err = sqrt(sum((w - wm).^2))/normb;
+0138     wm  = w;
+0139     
+0140     <span class="comment">% print information</span>
+0141     noi = noi + 1;
+0142     <span class="keyword">if</span> mod(noi, ptf) == 0
+0143         fprintf(<span class="string">'iter %4d, obj %1.2e, err %1.2e\n'</span>, noi, obj, err);
+0144     <span class="keyword">end</span>
+0145     <span class="keyword">if</span> noi &gt;= itm
+0146         <span class="keyword">break</span>;
+0147     <span class="keyword">end</span>
+0148 <span class="keyword">end</span>
+0149 
+0150 <span class="keyword">end</span>
+0151 
+0152 <a name="_sub1" href="#_subfunctions" class="code">function [p,R,Rprox] = sr3_parse_input(A,b,m,n,varargin)</a>
+0153 <span class="comment">%SR3_PARSE_INPUT parse the input to SR3</span>
+0154 <span class="comment">% Sets default values and checks types (within reason)</span>
+0155 <span class="comment">% See also sr3 for details</span>
+0156 
+0157     l1R = @(x) sum(abs(x));
+0158     l1Rprox = @(x,alpha) sign(x).*(abs(x)-alpha).*(abs(x)&gt;alpha);
+0159 
+0160     defaultx0 = zeros(n,1);
+0161     defaultw0 = zeros(n,1);
+0162     defaultC = speye(n);
+0163     defaultlam = 1.0;
+0164     defaultkap = 1.0;
+0165     defaultitm = 100;
+0166     defaulttol = 1e-6;
+0167     defaultptf = 0;
+0168     defaultmode = <span class="string">'1'</span>;
+0169     defaultl0w = 0.0;
+0170     defaultl1w = 0.0;
+0171     defaultl2w = 0.0;
+0172     defaultR = l1R;
+0173     defaultRprox = l1Rprox;
+0174     defaultifusenormal = 0;
+0175     defaultifuselsqr = 0;    
+0176     
+0177     p = inputParser;
+0178     isdouble = @(x) isa(x,<span class="string">'double'</span>);
+0179     isdoublep = @(x) isa(x,<span class="string">'double'</span>) &amp;&amp; x &gt; 0;
+0180     isdoublepp = @(x) isa(x,<span class="string">'double'</span>) &amp;&amp; x &gt;= 0;
+0181     isdoublem = @(x) isa(x,<span class="string">'double'</span>) &amp;&amp; length(x)==m;
+0182     isdoublen = @(x) isa(x,<span class="string">'double'</span>) &amp;&amp; length(x)==n;
+0183     isnumericp = @(x) isnumeric(x) &amp;&amp; x &gt; 0;
+0184     isnumericpp = @(x) isnumeric(x) &amp;&amp; x &gt;= 0;    
+0185     isfunhandle = @(x) isa(x,<span class="string">'function_handle'</span>);
+0186     
+0187     addRequired(p,<span class="string">'A'</span>,isdouble);
+0188     addRequired(p,<span class="string">'b'</span>,isdoublem);
+0189     addParameter(p,<span class="string">'x0'</span>,defaultx0,isdoublen);
+0190     addParameter(p,<span class="string">'w0'</span>,defaultw0,isdouble);
+0191     addParameter(p,<span class="string">'C'</span>,defaultC,isdouble);
+0192     addParameter(p,<span class="string">'lam'</span>,defaultlam,isdoublep);
+0193     addParameter(p,<span class="string">'kap'</span>,defaultkap,isdoublep);
+0194     addParameter(p,<span class="string">'itm'</span>,defaultitm,isnumericp);
+0195     addParameter(p,<span class="string">'tol'</span>,defaulttol,isdoublep);
+0196     addParameter(p,<span class="string">'ptf'</span>,defaultptf,isnumericpp);
+0197     addParameter(p,<span class="string">'mode'</span>,defaultmode,@ischar);
+0198     addParameter(p,<span class="string">'l0w'</span>,defaultl0w,isdoublepp);
+0199     addParameter(p,<span class="string">'l1w'</span>,defaultl1w,isdoublepp);
+0200     addParameter(p,<span class="string">'l2w'</span>,defaultl2w,isdoublepp);
+0201     addParameter(p,<span class="string">'R'</span>,defaultR,isfunhandle);
+0202     addParameter(p,<span class="string">'Rprox'</span>,defaultRprox,isfunhandle);
+0203     addParameter(p,<span class="string">'ifusenormal'</span>,defaultifusenormal,@isnumeric);
+0204     addParameter(p,<span class="string">'ifuselsqr'</span>,defaultifuselsqr,@isnumeric);
+0205 
+0206     parse(p,A,b,varargin{:});
+0207     
+0208     <span class="comment">% override if mode '0' '1' or '2' selected</span>
+0209     <span class="keyword">if</span> strcmp(p.Results.mode,<span class="string">'0'</span>)
+0210         l0w = 1; l1w = 0; l2w = 0;
+0211     <span class="keyword">elseif</span> strcmp(p.Results.mode,<span class="string">'1'</span>)
+0212         l0w = 0; l1w = 1; l2w = 0;
+0213     <span class="keyword">elseif</span> strcmp(p.Results.mode,<span class="string">'2'</span>)
+0214         l0w = 0; l1w = 0; l2w = 1;
+0215     <span class="keyword">else</span>
+0216         l0w = p.Results.l0w; l1w = p.Results.l1w; l2w = p.Results.l2w;
+0217     <span class="keyword">end</span>
+0218 
+0219     <span class="keyword">if</span> strcmp(p.Results.mode,<span class="string">'0'</span>) || strcmp(p.Results.mode,<span class="string">'1'</span>) <span class="keyword">...</span>
+0220             || strcmp(p.Results.mode,<span class="string">'2'</span>) || strcmp(mode,<span class="string">'mixed'</span>)
+0221         <span class="keyword">if</span> (abs(l0w) == 0 &amp;&amp; abs(l1w) == 0 &amp;&amp; abs(l2w) == 0)
+0222             warning([<span class="string">'all weights in mixed norm are zero'</span>, <span class="keyword">...</span>
+0223                 <span class="string">'\n prox operation does nothing'</span>])
+0224         <span class="keyword">end</span>
+0225         R = @(x) <a href="l012Rprox.html" class="code" title="function z = l012Rprox(x,alpha,l0w,l1w,l2w,ifprox)">l012Rprox</a>(x,1,l0w,l1w,l2w,0);
+0226         Rprox = @(x,alpha) <a href="l012Rprox.html" class="code" title="function z = l012Rprox(x,alpha,l0w,l1w,l2w,ifprox)">l012Rprox</a>(x,alpha,l0w,l1w,l2w,1);
+0227     <span class="keyword">elseif</span> strcmp(mode,<span class="string">'other'</span>)
+0228         R = p.Results.R;
+0229         Rprox = p.Results.Rprox;
+0230     <span class="keyword">else</span>
+0231         error(<span class="string">'incorrect value for mode'</span>)
+0232     <span class="keyword">end</span>
+0233 
+0234     
+0235 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Fri 24-Aug-2018 16:20:34 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

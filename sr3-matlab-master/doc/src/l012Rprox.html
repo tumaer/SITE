@@ -1,0 +1,153 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of l012Rprox</title>
+  <meta name="keywords" content="l012Rprox">
+  <meta name="description" content="L012RPROX utility function for the l0, l1, and l2 penalties">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../index.html">Home</a> &gt;  <a href="index.html">src</a> &gt; l012Rprox.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../index.html"><img alt="<" border="0" src="../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for src&nbsp;<img alt=">" border="0" src="../right.png"></a></td></tr></table>-->
+
+<h1>l012Rprox
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>L012RPROX utility function for the l0, l1, and l2 penalties</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>function z = l012Rprox(x,alpha,l0w,l1w,l2w,ifprox) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre class="comment">L012RPROX utility function for the l0, l1, and l2 penalties
+ this function returns either the value of the penalty or 
+ the solution of the prox problem (if ifprox):
+
+ argmin_z alpha*(l0w* nnz(z) + l1w*\|z\|_1 + l2w*0.5\|z\|_2^2) 
+                   + 0.5*\|x-z\|_2^2
+
+ If ~ifprox, then 
+ l0w*nnz(x) + l1w*\|x\|_1 + l2w*0.5*\|x\|_2^2 is returned
+
+ input:
+   x - vector, as above
+   alpha - weight, as above
+   mode - string, '0' -&gt; p = 0, etc.
+   ifprox - flag, as above</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="l012vecRprox.html" class="code" title="function z = l012vecRprox(x,alpha,l0w,l1w,l2w,ifprox,ndim)">l012vecRprox</a>	L012VECRPROX utility function for the l0, l1, and l2 penalties</li><li><a href="sr3.html" class="code" title="function [x, w] = sr3(A,b,varargin)">sr3</a>	SR3 Relaxed pursuit method for regularized least squares problems</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre>0001 
+0002 <a name="_sub0" href="#_subfunctions" class="code">function z = l012Rprox(x,alpha,l0w,l1w,l2w,ifprox)</a>
+0003 <span class="comment">%L012RPROX utility function for the l0, l1, and l2 penalties</span>
+0004 <span class="comment">% this function returns either the value of the penalty or</span>
+0005 <span class="comment">% the solution of the prox problem (if ifprox):</span>
+0006 <span class="comment">%</span>
+0007 <span class="comment">% argmin_z alpha*(l0w* nnz(z) + l1w*\|z\|_1 + l2w*0.5\|z\|_2^2)</span>
+0008 <span class="comment">%                   + 0.5*\|x-z\|_2^2</span>
+0009 <span class="comment">%</span>
+0010 <span class="comment">% If ~ifprox, then</span>
+0011 <span class="comment">% l0w*nnz(x) + l1w*\|x\|_1 + l2w*0.5*\|x\|_2^2 is returned</span>
+0012 <span class="comment">%</span>
+0013 <span class="comment">% input:</span>
+0014 <span class="comment">%   x - vector, as above</span>
+0015 <span class="comment">%   alpha - weight, as above</span>
+0016 <span class="comment">%   mode - string, '0' -&gt; p = 0, etc.</span>
+0017 <span class="comment">%   ifprox - flag, as above</span>
+0018 <span class="comment">%</span>
+0019 
+0020 mode = (l0w ~= 0)*1 + (l1w ~= 0)*2 + (l2w ~= 0)*4;
+0021 
+0022 <span class="comment">% avoid unnecessary computation if possible</span>
+0023 <span class="keyword">switch</span> mode
+0024     <span class="keyword">case</span> 1
+0025         <span class="keyword">if</span> ifprox
+0026             alpha0 = l0w*alpha;
+0027             z = x.*(abs(x) &gt; sqrt(2*alpha0));
+0028         <span class="keyword">else</span>
+0029             z = l0w*nnz(x);
+0030         <span class="keyword">end</span>
+0031     <span class="keyword">case</span> 2
+0032         <span class="keyword">if</span> ifprox
+0033             alpha1 = l1w*alpha;
+0034             z = sign(x).*(abs(x)-alpha1).*(abs(x)&gt;alpha1);      
+0035         <span class="keyword">else</span>
+0036             z = l1w*sum(abs(x));
+0037         <span class="keyword">end</span>
+0038     <span class="keyword">case</span> 3
+0039         <span class="keyword">if</span> ifprox
+0040             alpha0 = l0w*alpha;
+0041             alpha1 = l1w*alpha;
+0042             z = sign(x).*(abs(x)-alpha1).*(abs(x)&gt;alpha1);
+0043             fz = (abs(z)~=0)*alpha0+abs(z)*alpha1+0.5*abs(z-x).^2;
+0044             z = z.*(fz &lt; 0.5*abs(x).^2);
+0045         <span class="keyword">else</span>
+0046             z = l0w*nnz(x)+l1w*sum(abs(x));
+0047         <span class="keyword">end</span>
+0048     <span class="keyword">case</span> 4
+0049         <span class="keyword">if</span> ifprox
+0050             alpha2 = l2w*alpha;
+0051             z = x/(1.0+alpha2);
+0052         <span class="keyword">else</span>
+0053             z = l2w*0.5*sum(abs(x).^2);
+0054         <span class="keyword">end</span>
+0055     <span class="keyword">case</span> 5
+0056         <span class="keyword">if</span> ifprox
+0057             alpha0 = alpha*l0w;
+0058             alpha2 = alpha*l2w;
+0059             z = x/(1+alpha2);
+0060             fz = (abs(z)~=0)*alpha0+ <span class="keyword">...</span>
+0061                 0.5*alpha2*abs(z).^2+0.5*abs(z-x).^2;
+0062             z = z.*(fz &lt; 0.5*abs(x).^2);
+0063         <span class="keyword">else</span>
+0064             z = l0w*nnz(x)+l2w*0.5*sum(abs(x).^2);
+0065         <span class="keyword">end</span>
+0066     <span class="keyword">case</span> 6
+0067         <span class="keyword">if</span> ifprox
+0068             alpha1 = alpha*l1w;
+0069             alpha2 = alpha*l2w;
+0070             z = sign(x).*(abs(x)-alpha1).*(abs(x)&gt;alpha1)/(1+alpha2);
+0071         <span class="keyword">else</span>
+0072             z = l1w*sum(abs(x))+l2w*0.5*sum(abs(x).^2);
+0073         <span class="keyword">end</span>
+0074     <span class="keyword">case</span> 7
+0075         <span class="keyword">if</span> ifprox
+0076             alpha0 = alpha*l0w;
+0077             alpha1 = alpha*l1w;
+0078             alpha2 = alpha*l2w;
+0079             z = sign(x).*(abs(x)-alpha1).*(abs(x)&gt;alpha1)/(1+alpha2);
+0080             fz = (abs(z)~=0)*alpha0+abs(z)*alpha1+ <span class="keyword">...</span>
+0081                 0.5*alpha2*abs(z).^2+0.5*abs(z-x).^2;
+0082             z = z.*(fz &lt; 0.5*abs(x).^2);
+0083         <span class="keyword">else</span>
+0084             z = l0w*nnz(x)+l1w*sum(abs(x))+l2w*0.5*sum(abs(x).^2);
+0085         <span class="keyword">end</span>
+0086     <span class="keyword">otherwise</span>
+0087         <span class="keyword">if</span> ifprox
+0088             z = x;
+0089         <span class="keyword">else</span>
+0090             z = 0;
+0091         <span class="keyword">end</span>
+0092 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Fri 24-Aug-2018 16:20:34 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

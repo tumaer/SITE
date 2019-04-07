@@ -1,0 +1,90 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of l012vecRprox</title>
+  <meta name="keywords" content="l012vecRprox">
+  <meta name="description" content="L012VECRPROX utility function for the l0, l1, and l2 penalties">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../index.html">Home</a> &gt;  <a href="index.html">src</a> &gt; l012vecRprox.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../index.html"><img alt="<" border="0" src="../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for src&nbsp;<img alt=">" border="0" src="../right.png"></a></td></tr></table>-->
+
+<h1>l012vecRprox
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>L012VECRPROX utility function for the l0, l1, and l2 penalties</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>function z = l012vecRprox(x,alpha,l0w,l1w,l2w,ifprox,ndim) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre class="comment">L012VECRPROX utility function for the l0, l1, and l2 penalties
+ on vectors.
+
+ x is assumed to be have entries which are in turn coordinates of 
+ ndim-dimensional vectors. The first length(x)/ndim entries correspond
+ to the first coordinate, the second length(x)/ndim entries correspond
+ to the second coordinate, and so on. 
+ 
+ prox-ing is then applied to the euclidian norm of these points
+ in ndim-dimensional space and the points are rescaled.
+
+ See also <a href="l012Rprox.html" class="code" title="function z = l012Rprox(x,alpha,l0w,l1w,l2w,ifprox)">L012RPROX</a></pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="l012Rprox.html" class="code" title="function z = l012Rprox(x,alpha,l0w,l1w,l2w,ifprox)">l012Rprox</a>	L012RPROX utility function for the l0, l1, and l2 penalties</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="sr3_deconvtv.html" class="code" title="function [x,w,stats] = sr3_deconvtv(cmat,img,varargin)">sr3_deconvtv</a>	SR3_DECONVTV SR3-style relaxed pursuit method for total variation</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function z = l012vecRprox(x,alpha,l0w,l1w,l2w,ifprox,ndim)</a>
+0002 <span class="comment">%L012VECRPROX utility function for the l0, l1, and l2 penalties</span>
+0003 <span class="comment">% on vectors.</span>
+0004 <span class="comment">%</span>
+0005 <span class="comment">% x is assumed to be have entries which are in turn coordinates of</span>
+0006 <span class="comment">% ndim-dimensional vectors. The first length(x)/ndim entries correspond</span>
+0007 <span class="comment">% to the first coordinate, the second length(x)/ndim entries correspond</span>
+0008 <span class="comment">% to the second coordinate, and so on.</span>
+0009 <span class="comment">%</span>
+0010 <span class="comment">% prox-ing is then applied to the euclidian norm of these points</span>
+0011 <span class="comment">% in ndim-dimensional space and the points are rescaled.</span>
+0012 <span class="comment">%</span>
+0013 <span class="comment">% See also L012RPROX</span>
+0014 
+0015 n2 = length(x)/ndim;
+0016 x2 = reshape(x,n2,ndim);
+0017 
+0018 r = sqrt(sum(x2.^2,2));
+0019 
+0020 z = <a href="l012Rprox.html" class="code" title="function z = l012Rprox(x,alpha,l0w,l1w,l2w,ifprox)">l012Rprox</a>(r,alpha,l0w,l1w,l2w,ifprox);
+0021 
+0022 r = r + (r==0);
+0023 
+0024 <span class="keyword">if</span> ifprox
+0025     z = repmat(z./r,1,ndim);
+0026     x2 =x2.*z;
+0027 
+0028     z = x2(:);
+0029 <span class="keyword">end</span>
+0030 
+0031 
+0032</pre></div>
+<hr><address>Generated on Fri 24-Aug-2018 16:20:34 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>
