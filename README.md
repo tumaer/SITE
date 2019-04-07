@@ -2,8 +2,7 @@
 
 This project contains the implementation of SITE, an approach
 to identify modified differential equations from simulation
-data as shown in 'Sparse Identification of Truncation Errors' 
-of Stephan Thaler, Ludger Paehler and Nikolaus A. Adams. 
+data as shown in 'Sparse Identification of Truncation Errors'. 
 All codes used to generate the data and the plots of the 
 paper are given here. A detailed explanation of the approach 
 can be found in the [preprint](https://www.google.com). 
