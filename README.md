@@ -5,7 +5,7 @@ to identify modified differential equations from simulation
 data as shown in 'Sparse Identification of Truncation Errors'. 
 All codes used to generate the data and the plots of the 
 paper are given here. A detailed explanation of the approach 
-can be found in the [preprint](https://www.google.com). 
+can be found in the [preprint](https://arxiv.org/abs/1904.03669). 
 
 ## Built With
 
@@ -45,7 +45,7 @@ and [Nikolaus A. Adams](http://www.professoren.tum.de/en/adams-nikolaus/)
 ## License
 
 This project is licensed under the MIT License - see 
-the [LICENSE.md](LICENSE.md) file for details
+the [LICENSE](LICENSE) file for details
 
 ## Acknowledgments
 
@@ -62,7 +62,7 @@ and the consent to publish these parts here
 @article{thaler2019site,
   title={Sparse Identification of Truncation Errors},
   author={Thaler, Stephan and Paehler, Ludger and Adams, Nikolaus A.},
-  journal={arXiv preprint arXiv:},
+  journal={arXiv preprint arXiv:1904.03669},
   year={2019}
 }
 ```
