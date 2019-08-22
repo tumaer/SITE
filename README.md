@@ -5,7 +5,7 @@ to identify modified differential equations from simulation
 data as shown in 'Sparse Identification of Truncation Errors'. 
 All codes used to generate the data and the plots of the 
 paper are given here. A detailed explanation of the approach 
-can be found in the [preprint](https://arxiv.org/abs/1904.03669). 
+can be found in the corresponding article. DOI: [https://doi.org/10.1016/j.jcp.2019.07.049](https://doi.org/10.1016/j.jcp.2019.07.049)
 
 ## Built With
 
@@ -36,9 +36,9 @@ the issues tab on GitHub.
 
 ## Code Author
 
-[**Stephan Thaler**](https://github.com/s-thaler)
+[**Stephan Thaler**](https://www.researchgate.net/profile/Stephan_Thaler2)
 
-Co-authors of the paper: [Ludger Paehler](https://ludgerpaehler.github.io/)
+Co-authors of the article: [Ludger Paehler](https://ludgerpaehler.github.io/)
 and [Nikolaus A. Adams](http://www.professoren.tum.de/en/adams-nikolaus/)
 
 
@@ -59,10 +59,12 @@ and the consent to publish these parts here
 
 ## Citation
 ```
-@article{thaler2019site,
-  title={Sparse Identification of Truncation Errors},
-  author={Thaler, Stephan and Paehler, Ludger and Adams, Nikolaus A.},
-  journal={arXiv preprint arXiv:1904.03669},
-  year={2019}
+@article{Thaler.2019,
+ author = {Thaler, Stephan and Paehler, Ludger and Adams, Nikolaus A.},
+ year = {2019},
+ title = {Sparse identification of truncation errors},
+ issn = {0021-9991},
+ journal = {Journal of Computational Physics},
+ doi = {10.1016/j.jcp.2019.07.049}
 }
 ```
